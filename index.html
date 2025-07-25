@@ -556,11 +556,68 @@
             }
         });
 
+        // VAPI Integration - Using HTML Script Tag method (simplest)
+        var vapiInstance = null;
+        const assistant = "c38c7c4d-8e7e-4e0c-a9bb-d33887d3a8b1";
+        const apiKey = "39f85d14-96b5-4fcc-a291-c71db4f33b12";
+        
         // Sales agent widget interaction
         document.querySelector('.sales-agent-widget').addEventListener('click', function() {
-            console.log('Sales agent widget clicked - integrate your widget here');
-            // Your sales agent widget code will go here
+            if (vapiInstance) {
+                console.log('Starting VAPI call...');
+                vapiInstance.start();
+            } else {
+                console.log('VAPI still loading, please wait...');
+            }
         });
+    </script>
+    
+    <!-- VAPI HTML Script Tag Implementation -->
+    <script>
+        (function (d, t) {
+            var g = document.createElement(t),
+            s = d.getElementsByTagName(t)[0];
+            g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+            g.defer = true;
+            g.async = true;
+            s.parentNode.insertBefore(g, s);
+
+            g.onload = function () {
+                vapiInstance = window.vapiSDK.run({
+                    apiKey: apiKey,
+                    assistant: assistant,
+                    config: {
+                        // Hide the default VAPI button since we're using our own
+                        position: "bottom-right",
+                        offset: "40px",
+                        width: "0px",
+                        height: "0px",
+                        idle: {
+                            color: "transparent",
+                            type: "pill",
+                            title: "",
+                            subtitle: "",
+                            icon: ""
+                        }
+                    }
+                });
+                
+                console.log('VAPI initialized successfully');
+                
+                // Listen for VAPI events
+                if (vapiInstance && vapiInstance.on) {
+                    vapiInstance.on('call-start', () => {
+                        console.log('Voice call started');
+                        document.querySelector('.sales-agent-widget').style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
+                    });
+                    
+                    vapiInstance.on('call-end', () => {
+                        console.log('Voice call ended');
+                        document.querySelector('.sales-agent-widget').style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    });
+                }
+            };
+        })(document, "script");
     </script>
 </body>
 </html>
