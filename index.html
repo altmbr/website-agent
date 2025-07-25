@@ -436,6 +436,26 @@
             .nav-links { display: none; }
             .hero { padding: 80px 0 60px; }
         }
+
+        /* Hide all VAPI default UI elements */
+        [id*="vapi"], [class*="vapi"], [data-vapi], 
+        div[style*="position: fixed"][style*="bottom"][style*="right"]:not(.sales-agent-widget) {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            pointer-events: none !important;
+        }
+        
+        /* Ensure our purple widget is always visible */
+        .sales-agent-widget {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: 99999 !important;
+        }
     </style>
 </head>
 <body>
@@ -558,14 +578,20 @@
 
         // VAPI Integration - Using HTML Script Tag method (simplest)
         var vapiInstance = null;
+        var isCallActive = false;
         const assistant = "c38c7c4d-8e7e-4e0c-a9bb-d33887d3a8b1";
         const apiKey = "39f85d14-96b5-4fcc-a291-c71db4f33b12";
         
         // Sales agent widget interaction
         document.querySelector('.sales-agent-widget').addEventListener('click', function() {
             if (vapiInstance) {
-                console.log('Starting VAPI call...');
-                vapiInstance.start();
+                if (isCallActive) {
+                    console.log('Ending VAPI call...');
+                    vapiInstance.stop();
+                } else {
+                    console.log('Starting VAPI call...');
+                    vapiInstance.start(assistant);
+                }
             } else {
                 console.log('VAPI still loading, please wait...');
             }
@@ -583,23 +609,46 @@
             s.parentNode.insertBefore(g, s);
 
             g.onload = function () {
+                const buttonConfig = {
+                    // Completely hide the default VAPI UI
+                    position: "bottom-right",
+                    offset: "40px",
+                    width: "0px",
+                    height: "0px",
+                    display: "none",
+                    idle: {
+                        color: "transparent",
+                        type: "pill",
+                        title: "",
+                        subtitle: "",
+                        icon: "",
+                        width: "0px",
+                        height: "0px"
+                    },
+                    loading: {
+                        color: "transparent",
+                        type: "pill",
+                        title: "",
+                        subtitle: "",
+                        icon: "",
+                        width: "0px",
+                        height: "0px"
+                    },
+                    active: {
+                        color: "transparent",
+                        type: "pill",
+                        title: "",
+                        subtitle: "",
+                        icon: "",
+                        width: "0px",
+                        height: "0px"
+                    }
+                };
+
                 vapiInstance = window.vapiSDK.run({
                     apiKey: apiKey,
                     assistant: assistant,
-                    config: {
-                        // Hide the default VAPI button since we're using our own
-                        position: "bottom-right",
-                        offset: "40px",
-                        width: "0px",
-                        height: "0px",
-                        idle: {
-                            color: "transparent",
-                            type: "pill",
-                            title: "",
-                            subtitle: "",
-                            icon: ""
-                        }
-                    }
+                    config: buttonConfig
                 });
                 
                 console.log('VAPI initialized successfully');
@@ -608,11 +657,13 @@
                 if (vapiInstance && vapiInstance.on) {
                     vapiInstance.on('call-start', () => {
                         console.log('Voice call started');
+                        isCallActive = true;
                         document.querySelector('.sales-agent-widget').style.background = 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)';
                     });
                     
                     vapiInstance.on('call-end', () => {
                         console.log('Voice call ended');
+                        isCallActive = false;
                         document.querySelector('.sales-agent-widget').style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                     });
                 }
